@@ -1,0 +1,42 @@
+import { io, Socket } from 'socket.io-client'
+
+const SOCKET_URL = 'http://localhost:3001'
+
+class SocketService {
+  private socket: Socket | null = null
+
+  connect() {
+    if (this.socket?.connected) return this.socket
+
+    this.socket = io(SOCKET_URL, {
+      autoConnect: true,
+      reconnection: true
+    })
+
+    this.socket.on('connect', () => {
+      console.log('✅ Connected to server:', this.socket?.id)
+    })
+
+    this.socket.on('disconnect', () => {
+      console.log('❌ Disconnected from server')
+    })
+
+    return this.socket
+  }
+
+  getSocket() {
+    if (!this.socket) {
+      return this.connect()
+    }
+    return this.socket
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect()
+      this.socket = null
+    }
+  }
+}
+
+export const socketService = new SocketService()

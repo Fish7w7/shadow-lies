@@ -20,7 +20,7 @@ export interface GameState {
   phase: 'night' | 'day' | 'voting' | 'results'
   round: number
   timeLeft: number
-  votes: Record<string, string>
+  votes: Record<string, string> // voterId -> targetId
   lastKilled?: string
   lastVoted?: string
 }

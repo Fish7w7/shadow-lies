@@ -1,12 +1,11 @@
 import { Server, Socket } from 'socket.io'
 import { nanoid } from 'nanoid'
-import type { Room, Player } from '@shared/types/game.js'
+import type { Room, Player } from '../../../../shared/types/game.js'
 
 const rooms = new Map<string, Room>()
 
 export function handleRoom(io: Server, socket: Socket) {
   
-  // Criar sala
   socket.on('room:create', (data: { username: string }, callback) => {
     const roomId = nanoid(6).toUpperCase()
     const player: Player = {
@@ -31,7 +30,6 @@ export function handleRoom(io: Server, socket: Socket) {
     console.log(`🏠 Room created: ${roomId} by ${data.username}`)
   })
   
-  // Entrar em sala
   socket.on('room:join', (data: { roomId: string, username: string }, callback) => {
     const room = rooms.get(data.roomId)
     
@@ -63,7 +61,6 @@ export function handleRoom(io: Server, socket: Socket) {
     console.log(`👤 ${data.username} joined room ${data.roomId}`)
   })
   
-  // Marcar pronto
   socket.on('room:ready', (data: { roomId: string }) => {
     const room = rooms.get(data.roomId)
     if (!room) return
@@ -75,7 +72,6 @@ export function handleRoom(io: Server, socket: Socket) {
     }
   })
   
-  // Iniciar partida
   socket.on('room:start', (data: { roomId: string }, callback) => {
     const room = rooms.get(data.roomId)
     
@@ -93,13 +89,19 @@ export function handleRoom(io: Server, socket: Socket) {
     }
     
     room.state = 'playing'
+    
+    // Inicializar o jogo
+    socket.emit('game:initialize', {
+      roomId: data.roomId,
+      players: readyPlayers
+    })
+    
     io.to(data.roomId).emit('game:start', { roomId: data.roomId })
     callback({ success: true })
     
     console.log(`🎮 Game started in room ${data.roomId}`)
   })
   
-  // Sair da sala
   socket.on('disconnect', () => {
     rooms.forEach((room, roomId) => {
       const playerIndex = room.players.findIndex(p => p.id === socket.id)
